@@ -13,28 +13,16 @@ from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from configparser import ConfigParser
 
-# load configurations from config.ini file
-config = ConfigParser()
-config.read('config.ini')
-start_year = int(config.get('configuration', 'start_year'))
-end_year = int(config.get('configuration', 'end_year'))
-start_month = int(config.get('configuration', 'start_month'))
-end_month = int(config.get('configuration', 'end_month'))
-avg_temperature = float(config.get('configuration', 'avg_temperature'))
-prcp_days = int(config.get('configuration', 'prcp_days'))
-prcp_amount = float(config.get('configuration', 'prcp_amount'))
+def changedPostalCode():
+    nomi = pgeocode.Nominatim('de')
+    # get lat and lon with postal code
+    postalcode_data = nomi.query_postal_code(st.session_state['postalCode'])
 
-df = pd.DataFrame()
+    # write lat and lon in form
+    st.session_state["lat"] = str(postalcode_data['latitude'])
+    st.session_state["lon"] = str(postalcode_data['longitude'])
 
-st.title('Crop Insurance Calculator')
-st.write('Welcome to the future of calculating crop insurance premiums. This example calculator is for open strawberry fields and focuses on the factor heavy rainfall.')
-area = st.slider('area in m^2', min_value=5000, max_value=100000, value=5000)
-harvest = st.slider('average harvest in last 5 years', min_value=5000, max_value=1000000, value=5000)
-postalCode = st.text_input('Postal Code', '72127')
-st.write('Calculated premium without AI: ', harvest*0.07)
-
-if st.button('calculate'):
-
+def calculate():
     nomi = pgeocode.Nominatim('de')
 
     #nomi.query_postal_code(float(postalCode))
@@ -43,6 +31,7 @@ if st.button('calculate'):
     # Create Point for entered postal code
     location = Point(postalcode_data['latitude'], postalcode_data['longitude'])
 
+    df = pd.DataFrame()
 
     # Create datset with data from meteostat
     for x in range(start_year, end_year):
@@ -143,5 +132,29 @@ if st.button('calculate'):
     st.line_chart(new_situation_predict)
     st.write('Calculated premium with AI: ', harvest*new_situation_predict[0])
 
-else:
-    st.write("...")
+
+# load configurations from config.ini file
+config = ConfigParser()
+config.read('config.ini')
+start_year = int(config.get('configuration', 'start_year'))
+end_year = int(config.get('configuration', 'end_year'))
+start_month = int(config.get('configuration', 'start_month'))
+end_month = int(config.get('configuration', 'end_month'))
+avg_temperature = float(config.get('configuration', 'avg_temperature'))
+prcp_days = int(config.get('configuration', 'prcp_days'))
+prcp_amount = float(config.get('configuration', 'prcp_amount'))
+
+
+
+st.title('Crop Insurance Calculator')
+st.write('Welcome to the future of calculating crop insurance premiums. This example calculator is for open strawberry fields and focuses on the factor heavy rainfall.')
+area = st.slider('area in m^2', min_value=5000, max_value=100000, value=5000)
+harvest = st.slider('average harvest in last 5 years', min_value=5000, max_value=1000000, value=5000)
+postalCode = st.text_input('Postal Code', on_change=changedPostalCode, key="postalCode")
+latitude = st.text_input('Latitude', key='lat')
+longitude = st.text_input('Longitude', key='lon')
+st.write('Calculated premium without AI: ', harvest*0.07)
+st.button('Calculate', on_click=calculate)
+
+
+
