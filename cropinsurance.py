@@ -34,11 +34,11 @@ def calculate():
     df = pd.DataFrame()
 
     # Create datset with data from meteostat
-    for x in range(start_year, end_year):
+    for year in range(start_year, end_year):
         
         # Set time period
-        start = datetime(x, start_month, 1)
-        end = datetime(x, end_month, 31)
+        start = datetime(year, start_month, 1)
+        end = datetime(year, end_month, 31)
 
         # Get daily data
         data = Daily(location, start, end)
